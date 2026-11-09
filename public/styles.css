@@ -1,12 +1,15 @@
 :root {
-  --bg: #212121;
-  --sidebar: #171717;
-  --surface: #2f2f2f;
-  --hover: #2a2a2a;
-  --text: #ececec;
-  --muted: #9b9b9b;
-  --accent: #10a37f;
-  --border: #3a3a3a;
+  /* Palette: Philosophical, Blue Sash, Deep Dungeon, Black Kite, Crowshead */
+  --bg: #311b1d;
+  --sidebar: #1f0b0a;
+  --surface: #563c3b;
+  --hover: rgba(118, 121, 124, 0.25);
+  --text: #ece8e8;
+  --muted: #aeb1b5;
+  --accent: #c98f96;
+  --accent-text: #1f0b0a;
+  --border: #4a4e57;
+  --idle: #76797c;
 }
 
 * { box-sizing: border-box; }
@@ -34,7 +37,7 @@ button, textarea, input { font: inherit; color: inherit; }
   gap: 8px;
   overflow-y: auto;
 }
-.brand { font-weight: 600; padding: 8px 10px; }
+.brand { font-size: 20px; font-weight: 700; padding: 8px 10px; }
 .sidebar-btn {
   background: none;
   border: 0;
@@ -50,7 +53,7 @@ button, textarea, input { font: inherit; color: inherit; }
 .conversation .title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .conversation .badge {
   background: var(--accent);
-  color: #fff;
+  color: var(--accent-text);
   border-radius: 999px;
   font-size: 12px;
   padding: 0 7px;
@@ -73,7 +76,7 @@ button, textarea, input { font: inherit; color: inherit; }
   height: 8px;
   margin-right: 6px;
   border-radius: 50%;
-  background: var(--muted);
+  background: var(--idle);
 }
 .status.online::before { background: var(--accent); }
 
@@ -89,7 +92,7 @@ button, textarea, input { font: inherit; color: inherit; }
   text-align: center;
   color: var(--muted);
 }
-.empty h1 { color: var(--text); font-size: 28px; font-weight: 600; margin: 0 0 8px; }
+.empty h1 { color: var(--text); font-size: 32px; font-weight: 700; margin: 0 0 8px; }
 
 .message { display: flex; gap: 12px; }
 .message.user { justify-content: flex-end; }
@@ -103,7 +106,7 @@ button, textarea, input { font: inherit; color: inherit; }
   flex-shrink: 0;
   border-radius: 50%;
   background: var(--accent);
-  color: #fff;
+  color: var(--accent-text);
   font-size: 14px;
   font-weight: 600;
   display: grid;
@@ -154,6 +157,7 @@ button, textarea, input { font: inherit; color: inherit; }
   cursor: pointer;
 }
 .composer button:disabled { opacity: 0.3; cursor: default; }
+.composer textarea::placeholder, .login input::placeholder { color: var(--muted); opacity: 0.8; }
 .footnote { text-align: center; color: var(--muted); font-size: 12px; padding: 0 0 12px; }
 
 /* Admin login */
@@ -164,6 +168,7 @@ button, textarea, input { font: inherit; color: inherit; }
   flex-direction: column;
   gap: 12px;
 }
+.login h2 { font-size: 26px; font-weight: 700; margin: 0; }
 .login input {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -175,10 +180,10 @@ button, textarea, input { font: inherit; color: inherit; }
   border: 0;
   border-radius: 10px;
   padding: 10px;
-  color: #fff;
+  color: var(--accent-text);
   cursor: pointer;
 }
-.error { color: #f87171; min-height: 1.5em; margin: 0; }
+.error { color: #f1b5ba; min-height: 1.5em; margin: 0; }
 
 [hidden] { display: none !important; }
 
