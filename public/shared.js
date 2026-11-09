@@ -14,8 +14,9 @@ export function connect({ path, onOpen, onEvent, onClose }) {
     };
     ws.onmessage = (e) => onEvent(JSON.parse(e.data));
     ws.onclose = () => {
+      if (stopped) return;
       onClose?.();
-      if (!stopped) setTimeout(open, (delay = Math.min(delay * 2, 10000)));
+      setTimeout(open, (delay = Math.min(delay * 2, 10000)));
     };
   };
   open();

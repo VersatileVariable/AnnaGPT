@@ -79,6 +79,11 @@ function allowed(ws) {
 
 const cleanText = (value) => (typeof value === 'string' ? value.trim().slice(0, MAX_TEXT) : '');
 
+function attach(ws, id) {
+  if (!visitors.has(id)) visitors.set(id, new Set());
+  visitors.get(id).add(ws);
+}
+
 server.on('upgrade', (req, socket, head) => {
   const url = new URL(req.url, 'http://localhost');
   if (url.pathname !== '/ws') return socket.destroy();
@@ -118,15 +123,13 @@ wss.on('connection', (ws) => {
 
   if (ws.role === 'admin') {
     admins.add(ws);
-    send(ws, { type: 'init', conversations: store.all() });
+    send(ws, { type: 'init', conversations: store.all().filter((c) => c.messages.length) });
     toAllVisitors({ type: 'presence', online: true });
   } else {
-    // Unknown ids get a fresh conversation, so ids can't be guessed into existence.
-    const conversation = (ws.conversationId && store.get(ws.conversationId)) || store.create();
-    ws.conversationId = conversation.id;
-    if (!visitors.has(conversation.id)) visitors.set(conversation.id, new Set());
-    visitors.get(conversation.id).add(ws);
-    send(ws, { type: 'init', id: conversation.id, messages: conversation.messages, online: admins.size > 0 });
+    const conversation = ws.conversationId && store.get(ws.conversationId);
+    ws.conversationId = conversation ? conversation.id : null;
+    if (conversation) attach(ws, conversation.id);
+    send(ws, { type: 'init', id: ws.conversationId, messages: conversation?.messages ?? [], online: admins.size > 0 });
   }
 
   ws.on('message', (raw) => {
@@ -153,13 +156,19 @@ wss.on('connection', (ws) => {
 });
 
 function onVisitorEvent(ws, data) {
-  const id = ws.conversationId;
-  if (data?.type === 'typing') return toAdmins({ type: 'typing', id });
+  if (data?.type === 'typing') return ws.conversationId && toAdmins({ type: 'typing', id: ws.conversationId });
   if (data?.type !== 'message') return;
 
   const text = cleanText(data.text);
   if (!text || !allowed(ws)) return;
 
+  // Conversations are created on the first message, so empty chats never exist.
+  if (!ws.conversationId) {
+    ws.conversationId = store.create().id;
+    attach(ws, ws.conversationId);
+    send(ws, { type: 'session', id: ws.conversationId });
+  }
+  const id = ws.conversationId;
   const message = store.addMessage(id, 'user', text);
   toVisitor(id, { type: 'message', message });
   toAdmins({ type: 'message', id, message });

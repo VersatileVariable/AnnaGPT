@@ -1,5 +1,11 @@
 # AnnaGPT
 
+```
+(
+    )
+c[_]
+```
+
 A ChatGPT-style chat interface where the replies come from a real person. Visitors chat in the familiar UI; messages land in a private inbox where you answer them in real time.
 
 Live at <https://annagpt.duckdns.org> (inbox: <https://annagpt.duckdns.org/admin.html>).
@@ -111,7 +117,7 @@ public/
 
 ## Behavior
 
-- Each visitor gets a conversation id kept in `localStorage`; "New chat" starts a fresh one.
+- Visitors get a chat history in the sidebar (stored in their browser's `localStorage`); "New chat" starts a fresh draft and the conversation is only created on the first message. On phones the sidebar opens from the menu button.
 - Visitors see whether you are online and a typing indicator while you write.
 - The inbox shows unread counts and syncs across multiple tabs/devices.
 - Limits: 2000 characters per message, 20 messages per minute per connection.

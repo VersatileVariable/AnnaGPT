@@ -8,19 +8,24 @@
   </head>
   <body>
     <div class="app">
-      <aside class="sidebar">
+      <aside id="sidebar" class="sidebar">
         <div class="brand">AnnaGPT</div>
         <button id="new-chat" class="sidebar-btn">+ New chat</button>
+        <div id="history-label" class="sidebar-label" hidden>Your chats</div>
+        <nav id="history" class="history"></nav>
       </aside>
 
       <main class="main">
         <header class="topbar">
-          <span>AnnaGPT</span>
+          <span><button id="menu" class="menu-btn" aria-label="Show chats">☰</button>AnnaGPT</span>
           <span id="status" class="status">Connecting…</span>
         </header>
 
         <div id="messages" class="messages">
           <div id="empty" class="empty">
+            <pre class="logo" aria-hidden="true">  (
+   )
+c[_]</pre>
             <h1>What can I help with?</h1>
             <p>Ask anything. A real human will answer.</p>
           </div>

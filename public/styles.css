@@ -49,6 +49,10 @@ button, textarea, input { font: inherit; color: inherit; }
 .sidebar-btn:hover, .sidebar-btn.active { background: var(--hover); }
 .sidebar-spacer { flex: 1; }
 
+.sidebar-label { color: var(--muted); font-size: 12px; padding: 12px 10px 0; }
+.history { display: flex; flex-direction: column; gap: 2px; }
+.history .sidebar-btn { width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
 .conversation { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
 .conversation .title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .conversation .badge {
@@ -92,6 +96,7 @@ button, textarea, input { font: inherit; color: inherit; }
   text-align: center;
   color: var(--muted);
 }
+.logo { margin: 0 0 20px; color: var(--accent); font: 20px/1.15 ui-monospace, Menlo, Consolas, monospace; text-align: left; }
 .empty h1 { color: var(--text); font-size: 32px; font-weight: 700; margin: 0 0 8px; }
 
 .message { display: flex; gap: 12px; }
@@ -187,6 +192,16 @@ button, textarea, input { font: inherit; color: inherit; }
 
 [hidden] { display: none !important; }
 
+.menu-btn { display: none; background: none; border: 0; font-size: 20px; cursor: pointer; padding: 0 12px 0 0; }
+
 @media (max-width: 720px) {
-  .sidebar { display: none; }
+  .sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 10;
+    transform: translateX(-100%);
+    transition: transform 0.2s;
+  }
+  .sidebar.open { transform: none; }
+  .menu-btn { display: inline-block; }
 }
