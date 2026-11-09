@@ -1,0 +1,18 @@
+{
+  "name": "annagpt",
+  "version": "0.1.0",
+  "description": "A ChatGPT-style chat interface where the replies come from a real person.",
+  "type": "module",
+  "private": true,
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node --env-file-if-exists=.env server/index.js",
+    "dev": "node --watch --env-file-if-exists=.env server/index.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "ws": "^8.18.0"
+  }
+}

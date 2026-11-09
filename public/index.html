@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AnnaGPT</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="app">
+      <aside class="sidebar">
+        <div class="brand">AnnaGPT</div>
+        <button id="new-chat" class="sidebar-btn">+ New chat</button>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <span>AnnaGPT</span>
+          <span id="status" class="status">Connecting…</span>
+        </header>
+
+        <div id="messages" class="messages">
+          <div id="empty" class="empty">
+            <h1>What can I help with?</h1>
+            <p>Ask anything. A real human will answer.</p>
+          </div>
+          <div id="thread" class="thread"></div>
+        </div>
+
+        <form id="composer" class="composer">
+          <textarea id="input" rows="1" placeholder="Message AnnaGPT" maxlength="2000" autofocus></textarea>
+          <button type="submit" aria-label="Send">↑</button>
+        </form>
+        <div class="footnote">AnnaGPT is a person and can reply slowly.</div>
+      </main>
+    </div>
+    <script type="module" src="/chat.js"></script>
+  </body>
+</html>
