@@ -87,6 +87,9 @@ function onEvent(event) {
     renderHistory();
   } else if (event.type === 'presence') {
     setOnline(event.online);
+  } else if (event.type === 'blocked') {
+    status.textContent = 'Messaging is unavailable';
+    status.classList.remove('online');
   } else if (event.type === 'typing') {
     thread.append(typing);
     scrollToBottom(scroller);

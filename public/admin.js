@@ -15,10 +15,14 @@ function renderList() {
     ...sorted.map((c) => {
       const btn = document.createElement('button');
       btn.className = `sidebar-btn conversation${c.id === selected ? ' active' : ''}`;
-      const title = document.createElement('span');
-      title.className = 'title';
-      title.textContent = preview(c);
-      btn.append(title);
+      const text = document.createElement('span');
+      text.className = 'title';
+      const name = document.createElement('strong');
+      name.textContent = `${c.label ?? 'Visitor'}${c.blocked ? ' (blocked)' : ''}`;
+      const last = document.createElement('small');
+      last.textContent = preview(c);
+      text.append(name, last);
+      btn.append(text);
       if (c.unread) {
         const badge = document.createElement('span');
         badge.className = 'badge';
@@ -31,10 +35,21 @@ function renderList() {
   );
 }
 
-function renderThread() {
+function renderHeader() {
   const c = conversations.get(selected);
   $('composer').hidden = !c;
-  $('title').textContent = c ? `Conversation ${c.id.slice(0, 8)}` : 'Select a conversation';
+  $('title').textContent = c ? `${c.label ?? 'Visitor'}${c.blocked ? ' (blocked)' : ''}` : 'Select a conversation';
+  const place = [c?.geo?.city, c?.geo?.region, c?.geo?.country].filter(Boolean).join(', ');
+  $('detail').textContent = c
+    ? [c.ip, place, c.device, `first seen ${new Date(c.createdAt).toLocaleString()}`].filter(Boolean).join(' · ')
+    : '';
+  $('block').hidden = !c?.ip;
+  $('block').textContent = c?.blocked ? 'Unblock IP' : 'Block IP';
+}
+
+function renderThread() {
+  const c = conversations.get(selected);
+  renderHeader();
   $('thread').replaceChildren(...(c?.messages ?? []).map((m) => messageEl(m)));
   scrollToBottom($('messages'));
 }
@@ -64,6 +79,7 @@ function onEvent(event) {
       conversations.set(event.id, c);
     }
     c.messages.push(event.message);
+    Object.assign(c, event.meta);
     c.updatedAt = event.message.ts;
     if (event.message.role === 'user') {
       if (event.id === selected) socket.send({ type: 'read', id: event.id });
@@ -71,10 +87,15 @@ function onEvent(event) {
     }
     renderList();
     if (event.id === selected) {
+      renderHeader();
       typing.remove();
       $('thread').append(messageEl(event.message));
       scrollToBottom($('messages'));
     }
+  } else if (event.type === 'blocked') {
+    for (const c of conversations.values()) if (c.ip === event.ip) c.blocked = event.blocked;
+    renderList();
+    renderHeader();
   } else if (event.type === 'typing' && event.id === selected) {
     $('thread').append(typing);
     scrollToBottom($('messages'));
@@ -117,6 +138,11 @@ $('login').addEventListener('submit', async (e) => {
   });
   if (res.ok) return start();
   $('login-error').textContent = res.status === 429 ? 'Too many attempts, try later.' : 'Wrong password.';
+});
+
+$('block').addEventListener('click', () => {
+  const c = conversations.get(selected);
+  if (c) socket?.send({ type: 'block', id: c.id, blocked: !c.blocked });
 });
 
 $('logout').addEventListener('click', async () => {

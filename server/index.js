@@ -5,6 +5,7 @@ import express from 'express';
 import { WebSocketServer } from 'ws';
 import { createStore } from './store.js';
 import { isAdminRequest, login, logout, sessionCookie } from './auth.js';
+import { describeVisitor } from './visitor.js';
 
 const PORT = Number(process.env.PORT) || 3000;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
@@ -101,6 +102,7 @@ server.on('upgrade', (req, socket, head) => {
   wss.handleUpgrade(req, socket, head, (ws) => {
     ws.role = isAdmin ? 'admin' : 'visitor';
     ws.conversationId = url.searchParams.get('cid');
+    if (!isAdmin) ws.visitor = describeVisitor(req, SECURE);
     wss.emit('connection', ws);
   });
 });
@@ -123,7 +125,7 @@ wss.on('connection', (ws) => {
 
   if (ws.role === 'admin') {
     admins.add(ws);
-    send(ws, { type: 'init', conversations: store.all().filter((c) => c.messages.length) });
+    send(ws, { type: 'init', conversations: store.adminView() });
     toAllVisitors({ type: 'presence', online: true });
   } else {
     const conversation = ws.conversationId && store.get(ws.conversationId);
@@ -158,20 +160,22 @@ wss.on('connection', (ws) => {
 function onVisitorEvent(ws, data) {
   if (data?.type === 'typing') return ws.conversationId && toAdmins({ type: 'typing', id: ws.conversationId });
   if (data?.type !== 'message') return;
+  if (store.isBlocked(ws.visitor.ip)) return send(ws, { type: 'blocked' });
 
   const text = cleanText(data.text);
   if (!text || !allowed(ws)) return;
 
   // Conversations are created on the first message, so empty chats never exist.
   if (!ws.conversationId) {
-    ws.conversationId = store.create().id;
+    ws.conversationId = store.create(ws.visitor).id;
     attach(ws, ws.conversationId);
     send(ws, { type: 'session', id: ws.conversationId });
   }
   const id = ws.conversationId;
+  store.updateVisitor(id, ws.visitor);
   const message = store.addMessage(id, 'user', text);
   toVisitor(id, { type: 'message', message });
-  toAdmins({ type: 'message', id, message });
+  toAdmins({ type: 'message', id, message, meta: store.meta(id) });
 }
 
 function onAdminEvent(_ws, data) {
@@ -179,6 +183,12 @@ function onAdminEvent(_ws, data) {
 
   if (data.type === 'typing') return toVisitor(data.id, { type: 'typing' });
   if (data.type === 'read') return store.markRead(data.id);
+  if (data.type === 'block') {
+    const { ip } = store.get(data.id);
+    if (!ip) return;
+    store.setBlocked(ip, data.blocked === true);
+    return toAdmins({ type: 'blocked', ip, blocked: data.blocked === true });
+  }
   if (data.type !== 'reply') return;
 
   const text = cleanText(data.text);

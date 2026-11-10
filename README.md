@@ -119,6 +119,7 @@ public/
 
 - Visitors get a chat history in the sidebar (stored in their browser's `localStorage`); "New chat" starts a fresh draft and the conversation is only created on the first message. On phones the sidebar opens from the menu button.
 - Visitors see whether you are online and a typing indicator while you write.
+- The inbox gives each visitor an anonymous label (e.g. "Silver Badger 76") and shows their IP, approximate location (offline `geoip-lite` database, no third-party lookups), device and first-seen time. "Block IP" stops that IP from sending messages; blocks persist and can be undone with "Unblock IP". Refresh the location data now and then with `npm update geoip-lite`.
 - The inbox shows unread counts and syncs across multiple tabs/devices.
 - Limits: 2000 characters per message, 20 messages per minute per connection.
 - Messages are rendered as plain text (never HTML).

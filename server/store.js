@@ -3,11 +3,29 @@ import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from '
 import { dirname } from 'node:path';
 
 // In-memory conversations persisted to a JSON file (debounced).
+const ADJECTIVES = ['Quiet', 'Curious', 'Gentle', 'Bright', 'Swift', 'Cozy', 'Clever', 'Brave', 'Sleepy', 'Merry', 'Misty', 'Sunny', 'Wandering', 'Velvet', 'Amber', 'Silver'];
+const ANIMALS = ['Otter', 'Fox', 'Heron', 'Badger', 'Finch', 'Hare', 'Lynx', 'Wren', 'Owl', 'Seal', 'Moth', 'Newt', 'Robin', 'Stoat', 'Swan', 'Vole'];
+
+// Deterministic from the id, so it never needs to be stored to stay stable.
+export function labelFor(id) {
+  const n = parseInt(id.replace(/-/g, '').slice(0, 8), 16);
+  const adjective = ADJECTIVES[n % ADJECTIVES.length];
+  const animal = ANIMALS[Math.floor(n / 16) % ANIMALS.length];
+  return `${adjective} ${animal} ${(Math.floor(n / 256) % 90) + 10}`;
+}
+
 export function createStore(file) {
   const conversations = new Map();
+  const blockedIps = new Set();
 
   if (existsSync(file)) {
-    for (const c of JSON.parse(readFileSync(file, 'utf8'))) conversations.set(c.id, c);
+    const saved = JSON.parse(readFileSync(file, 'utf8'));
+    // Older files were a bare array of conversations.
+    for (const c of Array.isArray(saved) ? saved : saved.conversations) {
+      c.label ??= labelFor(c.id);
+      conversations.set(c.id, c);
+    }
+    for (const ip of saved.blockedIps ?? []) blockedIps.add(ip);
   }
 
   let timer;
@@ -15,7 +33,7 @@ export function createStore(file) {
     clearTimeout(timer);
     mkdirSync(dirname(file), { recursive: true });
     const tmp = `${file}.tmp`;
-    writeFileSync(tmp, JSON.stringify([...conversations.values()]));
+    writeFileSync(tmp, JSON.stringify({ conversations: [...conversations.values()], blockedIps: [...blockedIps] }));
     renameSync(tmp, file);
   }
   const scheduleSave = () => {
@@ -26,12 +44,37 @@ export function createStore(file) {
   return {
     get: (id) => conversations.get(id),
 
-    all: () => [...conversations.values()].sort((a, b) => b.updatedAt - a.updatedAt),
+    // Conversations with at least one message, as shown in the admin inbox.
+    adminView: () =>
+      [...conversations.values()]
+        .filter((c) => c.messages.length)
+        .sort((a, b) => b.updatedAt - a.updatedAt)
+        .map((c) => ({ ...c, blocked: blockedIps.has(c.ip) })),
 
-    create() {
+    meta(id) {
+      const { label, ip, geo, device } = conversations.get(id);
+      return { label, ip, geo, device, blocked: blockedIps.has(ip) };
+    },
+
+    isBlocked: (ip) => blockedIps.has(ip),
+
+    setBlocked(ip, blocked) {
+      if (blocked) blockedIps.add(ip);
+      else blockedIps.delete(ip);
+      scheduleSave();
+    },
+
+    // Keeps the latest IP/location/device so a block targets where they are now.
+    updateVisitor(id, { ip, geo, device }) {
+      Object.assign(conversations.get(id), { ip, geo, device });
+      scheduleSave();
+    },
+
+    create({ ip = null, geo = null, device = null } = {}) {
       const now = Date.now();
-      const conversation = { id: randomUUID(), createdAt: now, updatedAt: now, unread: 0, messages: [] };
-      conversations.set(conversation.id, conversation);
+      const id = randomUUID();
+      const conversation = { id, label: labelFor(id), ip, geo, device, createdAt: now, updatedAt: now, unread: 0, messages: [] };
+      conversations.set(id, conversation);
       scheduleSave();
       return conversation;
     },

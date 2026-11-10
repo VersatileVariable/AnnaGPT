@@ -25,8 +25,14 @@
 
       <main class="main">
         <header class="topbar">
-          <span id="title">Select a conversation</span>
-          <span id="status" class="status">Connecting…</span>
+          <div>
+            <div id="title">Select a conversation</div>
+            <div id="detail" class="detail"></div>
+          </div>
+          <span class="topbar-right">
+            <button id="block" class="topbar-btn" hidden>Block IP</button>
+            <span id="status" class="status">Connecting…</span>
+          </span>
         </header>
 
         <div id="messages" class="messages">
